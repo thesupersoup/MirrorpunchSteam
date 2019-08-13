@@ -317,7 +317,7 @@ namespace Mirror.Punch
 
         public void LateUpdate ()
         {
-            while(EnableTransport)
+            if(EnableTransport)
             {
                 ProcessMessages(Client);
                 ProcessMessages(Server);

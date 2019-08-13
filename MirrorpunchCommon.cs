@@ -350,10 +350,11 @@ namespace Mirror.Punch
                     if (!a.IsKnown(senderId))
                     {
                         byte byteType = packet.Value.Data[0];
-                        PacketType packetType = (PacketType)byteType;
 
                         if (byteType < 0 || byteType >= (byte)PacketType.NUM_TYPES)
                             throw new Exception("Packet with invalid PacketType received from unexpected SteamId; check sending code?");
+
+                        PacketType packetType = (PacketType)byteType;
 
                         switch (packetType)
                         {
