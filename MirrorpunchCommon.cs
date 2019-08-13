@@ -21,7 +21,7 @@ namespace Mirror.Punch
         public const int MP_QUEUE_SIZE_WARNING = 75000;     // Triggers a warning if the ReceiveQueue has more than this number of packets waiting
         public const int MP_PACKET_MAX = 65507;             // Maximum packet size in byte; theoretical UDP limit, just want to catch bad actors
 
-        public const double MP_WARNING_TIMEOUT = 10.0;      // Time (seconds) to timeout a warning
+        public const double MP_QUEUE_WARNING_TIMEOUT = 10.0;    // Time (seconds) to throw another queue size warning
 
         // Common tick rates, in milliseconds
         public const double TICKRATE_32 = 31.25,
@@ -302,7 +302,7 @@ namespace Mirror.Punch
                     if (warned)
                     {
                         TimeSpan timeSinceWarning = DateTime.Now - timeWarned;
-                        if (timeSinceWarning.TotalSeconds > MP_WARNING_TIMEOUT)
+                        if (timeSinceWarning.TotalSeconds > MP_QUEUE_WARNING_TIMEOUT)
                             warned = false;
                     }
 

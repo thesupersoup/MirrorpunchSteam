@@ -174,7 +174,15 @@ namespace Mirror.Punch
                 if (channel < 0 || channel >= (int)P2PChannel.NUM_CHANNELS)
                     throw new Exception("Invalid send channel specified");
 
-                return SendPacket(HostId, data, data.Length, (P2PChannel)channel);
+                // Add PacketType header byte
+                byte[] packet = new byte[data.Length + 1];
+                packet[0] = (byte)PacketType.DATA;
+
+                // Move data array values to packet
+                for (int i = 1; i <= data.Length; i++)
+                    packet[i] = data[i - 1];
+
+                return SendPacket(HostId, packet, packet.Length, (P2PChannel)channel);
             }
             catch (Exception e)
             {
