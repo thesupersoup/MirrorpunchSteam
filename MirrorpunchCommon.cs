@@ -168,7 +168,7 @@ namespace Mirror.Punch
         public bool CloseSessionWithUser (SteamId id) => SteamNetworking.CloseP2PSessionWithUser(id);
 
         /// <summary>
-        /// Returns whether or not the packed could be sent
+        /// Sends a packet via Steamworks; Returns whether or not the packed could be sent
         /// </summary>
         public bool SendPacket (SteamId id, byte[] data, int len = -1, P2PChannel channel = P2PChannel.RELIABLE)
         {
@@ -188,6 +188,22 @@ namespace Mirror.Punch
             P2PSend send = (P2PSend)channel;
 
             return SteamNetworking.SendP2PPacket(id, data, len, (int)channel, send);
+        }
+
+        /// <summary>
+        /// Builds and returns a byte array with a PacketType header byte inserted
+        /// </summary>
+        public static byte[] BuildPacket(byte[] data, PacketType type)
+        {
+            // Add PacketType header byte
+            byte[] packet = new byte[data.Length + 1];
+            packet[0] = (byte)type;
+
+            // Move data array values to packet
+            for (int i = 1; i <= data.Length; i++)
+                packet[i] = data[i - 1];
+
+            return packet;
         }
 
         /// <summary>
