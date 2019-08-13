@@ -29,7 +29,7 @@ namespace Mirror.Punch
 
         public Action OnConnected;
         public Action OnDisconnected;
-        public Action<ArraySegment<byte>> OnDataReceived;
+        public Action<byte[]> OnDataReceived;
         public Action<Exception> OnError;
 
         #endregion Actions
@@ -275,7 +275,7 @@ namespace Mirror.Punch
             }
         }
 
-        protected override void HandleReceivedData (SteamId id, ArraySegment<byte> data)
+        protected override void HandleReceivedData (SteamId id, byte[] data)
         {
             try
             {
@@ -288,7 +288,7 @@ namespace Mirror.Punch
                 if (id != HostId)
                     throw new Exception("Received data from a SteamId that isn't our current host");
 
-                if (data == null || data.Array.Length == 0)
+                if (data == null || data.Length == 0)
                     throw new Exception("Data is null or zero-length");
 
                 // Raise OnDataReceived event

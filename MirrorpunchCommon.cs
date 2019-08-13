@@ -21,7 +21,7 @@ namespace Mirror.Punch
         public const int MP_QUEUE_SIZE_WARNING = 75000;     // Triggers a warning if the ReceiveQueue has more than this number of packets waiting
         public const int MP_PACKET_MAX = 65507;             // Maximum packet size in byte; theoretical UDP limit, just want to catch bad actors
 
-        public const double MP_WARNING_TIMEOUT = 10.0;      // Time (seconds) to timeout a warning
+        public const double MP_QUEUE_WARNING_TIMEOUT = 10.0;    // Time (seconds) to throw another queue size warning
 
         // Common tick rates, in milliseconds
         public const double TICKRATE_32 = 31.25,
@@ -146,12 +146,12 @@ namespace Mirror.Punch
 
         protected abstract void HandleConnectionFailed (SteamId id, P2PSessionError error);
 
-        public void OnReceivedData(SteamId id, ArraySegment<byte> data)
+        public void OnReceivedData(SteamId id, byte[] data)
         {
             HandleReceivedData(id, data);
         }
 
-        protected abstract void HandleReceivedData (SteamId id, ArraySegment<byte> data);
+        protected abstract void HandleReceivedData (SteamId id, byte[] data);
 
         protected abstract void ResetStatus ();
 
@@ -168,7 +168,7 @@ namespace Mirror.Punch
         public bool CloseSessionWithUser (SteamId id) => SteamNetworking.CloseP2PSessionWithUser(id);
 
         /// <summary>
-        /// Returns whether or not the packed could be sent
+        /// Sends a packet via Steamworks; Returns whether or not the packed could be sent
         /// </summary>
         public bool SendPacket (SteamId id, byte[] data, int len = -1, P2PChannel channel = P2PChannel.RELIABLE)
         {
@@ -302,7 +302,7 @@ namespace Mirror.Punch
                     if (warned)
                     {
                         TimeSpan timeSinceWarning = DateTime.Now - timeWarned;
-                        if (timeSinceWarning.TotalSeconds > MP_WARNING_TIMEOUT)
+                        if (timeSinceWarning.TotalSeconds > MP_QUEUE_WARNING_TIMEOUT)
                             warned = false;
                     }
 
@@ -344,41 +344,37 @@ namespace Mirror.Punch
 
                     SteamId senderId = packet.Value.SteamId;
 
-                    if (!a.IsKnown(senderId))
-                        throw new Exception($"Received a packet from an unexpected SteamId [{senderId}]");
-
                     if (packet.Value.Data == null || packet.Value.Data.Length == 0)
                         continue;
 
-                    byte byteType = packet.Value.Data[0];
-
-                    if (byteType < 0 || byteType >= (byte)PacketType.NUM_TYPES)
-                        throw new Exception("Packet with invalid PacketType received; check sending code?");
-
-                    PacketType packetType = (PacketType)byteType;
-                    byte[] data = packet.Value.Data;
-
-                    switch (packetType)
+                    if (!a.IsKnown(senderId))
                     {
-                        case PacketType.CONNECT:
-                            Output.Log($"Connection requested by {senderId}");
-                            a.OnSessionRequest(senderId);
-                            break;
-                        case PacketType.CONNECTION_ACCEPTED:
-                            Output.Log($"Connection accepted by {senderId}");
-                            break;
-                        case PacketType.DATA:
-                            if (data.Length == 1)
-                                throw new Exception($"Data packet received from {senderId} with length 1; no data attached?");
-                            a.OnReceivedData(senderId, new ArraySegment<byte>(data, 1, data.Length - 1));
-                            break;
-                        case PacketType.DISCONNECT:
-                            Output.Log($"Disconnect requested by {senderId}");
-                            a.OnDisconnectRequest(senderId);
-                            break;
-                        default:
-                            throw new Exception($"Unexpected packet type received from {senderId} [{byteType}]");
+                        byte byteType = packet.Value.Data[0];
+                        PacketType packetType = (PacketType)byteType;
+
+                        if (byteType < 0 || byteType >= (byte)PacketType.NUM_TYPES)
+                            throw new Exception("Packet with invalid PacketType received from unexpected SteamId; check sending code?");
+
+                        switch (packetType)
+                        {
+                            case PacketType.CONNECT:
+                                Output.Log($"Connection requested by {senderId}");
+                                a.OnSessionRequest(senderId);
+                                break;
+                            case PacketType.CONNECTION_ACCEPTED:
+                                Output.Log($"Connection accepted by {senderId}");
+                                break;
+                            default:
+                                throw new Exception($"Unexpected packet type received from {senderId} [{byteType}]");
+                        }
+
+                        // Packet from unknown sender handled without exception, continue
+                        continue;
                     }
+
+                    // Received a packet from a known sender, handle received data
+                    byte[] data = packet.Value.Data;
+                    a.OnReceivedData(senderId, data);
                 }
 
                 TimeSpan checkTimer = DateTime.Now - timer;

@@ -48,12 +48,12 @@ namespace Mirror.Punch
 
         private Action<int>                     _svConnected = null;
         private Action<int>                     _svDisconnected = null;
-        private Action<int, ArraySegment<byte>> _svDataReceived = null;
+        private Action<int, byte[]>             _svDataReceived = null;
         private Action<int, Exception>          _svError = null;
 
         private Action                          _clConnected = null;
         private Action                          _clDisconnected = null;
-        private Action<ArraySegment<byte>>      _clDataReceived = null;
+        private Action<byte[]>                  _clDataReceived = null;
         private Action<Exception>               _clError = null;
 
         #endregion Instance vars
@@ -174,7 +174,7 @@ namespace Mirror.Punch
             // Server
             _svConnected = (id) => OnServerConnected?.Invoke(id);
             _svDisconnected = (id) => OnServerDisconnected?.Invoke(id);
-            _svDataReceived = (id, data) => OnServerDataReceived?.Invoke(id, data);
+            _svDataReceived = (id, data) => OnServerDataReceived?.Invoke(id, new ArraySegment<byte>(data));
             _svError = (id, exception) => OnServerError?.Invoke(id, exception);
 
             Server.OnConnected += _svConnected;
@@ -185,7 +185,7 @@ namespace Mirror.Punch
             // Client
             _clConnected = () => OnClientConnected?.Invoke();
             _clDisconnected = () => OnClientDisconnected?.Invoke();
-            _clDataReceived = (data) => OnClientDataReceived?.Invoke(data);
+            _clDataReceived = (data) => OnClientDataReceived?.Invoke(new ArraySegment<byte>(data));
             _clError = (exception) => OnClientError?.Invoke(exception);
 
             Client.OnConnected += _clConnected;

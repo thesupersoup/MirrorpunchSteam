@@ -31,7 +31,7 @@ namespace Mirror.Punch
 
         public Action<int> OnConnected;
         public Action<int> OnDisconnected;
-        public Action<int, ArraySegment<byte>> OnDataReceived;
+        public Action<int, byte[]> OnDataReceived;
         public Action<int, Exception> OnError;
 
         #endregion Actions
@@ -160,14 +160,14 @@ namespace Mirror.Punch
             }
         }
 
-        protected override void HandleReceivedData (SteamId id, ArraySegment<byte> data)
+        protected override void HandleReceivedData (SteamId id, byte[] data)
         {
             try
             {
                 if (!id.IsValid)
                     throw new Exception("Received data from an invalid SteamId");
 
-                if (data == null || data.Array.Length == 0)
+                if (data == null || data.Length == 0)
                     throw new Exception("Data is null or zero-length");
 
                 int conn = PlayerRegistry.GetConnId(id);

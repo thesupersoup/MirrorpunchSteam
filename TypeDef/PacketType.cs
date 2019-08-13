@@ -7,8 +7,6 @@ namespace Mirror.Punch
     {
         CONNECT = 0,
         CONNECTION_ACCEPTED,
-        DATA,
-        DISCONNECT,
         NUM_TYPES
     }
 }
