@@ -258,7 +258,13 @@ namespace Mirror.Punch
                 if (!id.IsValid)
                     throw new Exception($"No valid SteamId found in player registry for connection id {conn}");
 
-                byte[] packet = BuildPacket(data, PacketType.DATA);
+                // Add PacketType header byte
+                byte[] packet = new byte[data.Length + 1];
+                packet[0] = (byte)PacketType.DATA;
+
+                // Move data array values to packet
+                for (int i = 1; i <= data.Length; i++)
+                    packet[i] = data[i - 1];
 
                 return SendPacket(id, packet, packet.Length, (P2PChannel)channel);
             }
